@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PacketSpy</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>PacketSpy</h1>
+    <div class="controls">
+      <input id="filter" placeholder="Filter by packet class…">
+      <label><input type="checkbox" id="pause"> Pause</label>
+      <button id="clear">Clear</button>
+      <span id="count">0 shown</span>
+    </div>
+  </header>
+  <main>
+    <table id="tbl">
+      <thead><tr><th>Time</th><th>Dir</th><th>Packet Class</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </main>
+  <footer>
+    <span>Listening on /events</span>
+  </footer>
+  <script src="/app.js"></script>
+</body>
+</html>

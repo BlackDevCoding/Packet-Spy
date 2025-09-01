@@ -1,7 +1,6 @@
 package dev.blackdev.log;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.packet.Packet;
-import javax.swing.SwingUtilities;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -13,7 +12,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import dev.blackdev.ui.PacketSpyWindow;
 public class PacketLogger {
     private static PacketLogger INSTANCE;
     private final LinkedBlockingQueue<String> queue = new LinkedBlockingQueue<>();
@@ -44,10 +42,7 @@ public class PacketLogger {
     }
     public void shutdown() {
         running.set(false);
-        try {
-            writer.flush();
-            writer.close();
-        } catch (IOException ignored) {}
+        try { writer.flush(); writer.close(); } catch (IOException ignored) {}
     }
     private void writerLoop() {
         while (running.get()) {
@@ -64,28 +59,22 @@ public class PacketLogger {
             }
         }
     }
-    private String nowIso() {
-        return ISO.format(Instant.now());
-    }
+    private String nowIso() { return ISO.format(Instant.now()); }
     private String esc(String s) {
         if (s == null) return "";
         return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
     }
-    private void push(String jsonLine) {
-        queue.offer(jsonLine);
+    private void emit(String json) {
+        queue.offer(json);
+        try { dev.blackdev.web.WebServer.broadcast(json); } catch (Throwable ignored) {}
     }
     private void logCommon(String direction, Packet<?> packet) {
         String ts = nowIso();
         String klass = packet.getClass().getName();
         String details;
-        try {
-            details = esc(String.valueOf(packet));
-        } catch (Throwable t) {
-            details = "toString() failed: " + t.getClass().getSimpleName();
-        }
+        try { details = esc(String.valueOf(packet)); } catch (Throwable t) { details = "toString() failed: " + t.getClass().getSimpleName(); }
         String json = "{\"ts\":\"" + ts + "\",\"direction\":\"" + direction + "\",\"class\":\"" + esc(klass) + "\",\"details\":\"" + details + "\"}";
-        SwingUtilities.invokeLater(() -> PacketSpyWindow.getInstance().append(ts, direction, klass));
-        push(json);
+        emit(json);
     }
     public void logOutbound(Packet<?> packet) { logCommon("OUT", packet); }
     public void logInbound(Packet<?> packet) { logCommon("IN", packet); }

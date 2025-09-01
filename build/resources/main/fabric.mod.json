@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "id": "packetspy",
-  "version": "1.21.8",
+  "version": "1.0.4",
   "name": "PacketSpy",
-  "description": "Opens a window that displays and saves every Minecraft packet going out and coming in.",
+  "description": "Opens a web UI and saves every Minecraft packet going out and coming in.",
   "authors": [
     "dev.blackdev"
   ],
