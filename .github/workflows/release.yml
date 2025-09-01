@@ -1,7 +1,7 @@
 name: build-and-release
 on:
   push:
-    branches: ["**"]
+    branches: ['**']
 
 permissions:
   contents: write
@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: '21'
           cache: gradle
 
       - name: Force JAVA_HOME to Java 21
@@ -30,16 +30,34 @@ jobs:
           unzip -q gradle.zip
           echo "GRADLE=$PWD/gradle-${GV}/bin/gradle" >> $GITHUB_ENV
 
-      - name: Build
+      - name: Build (clean, remap)
         run: |
           $GRADLE --version
-          $GRADLE --no-daemon build -x test
+          $GRADLE --no-daemon clean build remapJar -x test
           ls -al build/libs
 
-      - name: Find jar
+      - name: Pick remapped runtime JAR
         id: jar
+        shell: bash
         run: |
-          echo "path=$(ls build/libs/*.jar | head -n 1)" >> $GITHUB_OUTPUT
+          # Prefer Loom's remapped jar naming if present
+          CANDIDATE=$(ls build/libs/*-fabric.jar 2>/dev/null || true)
+          if [ -z "$CANDIDATE" ]; then
+            # Fallback: any jar that is NOT sources/dev/javadoc
+            CANDIDATE=$(find build/libs -maxdepth 1 -type f -name '*.jar' \
+              ! -name '*-sources.jar' ! -name '*-dev.jar' ! -name '*-javadoc.jar' \
+              | head -n 1)
+          fi
+          if [ -z "$CANDIDATE" ]; then
+            echo "No runtime JAR found in build/libs"; exit 1
+          fi
+          echo "path=$CANDIDATE" >> $GITHUB_OUTPUT
+          echo "Selected: $CANDIDATE"
+          # Quick sanity check for the mixin class presence
+          if ! (jar tf "$CANDIDATE" | grep -q 'dev/blackdev/mixin/ClientConnectionMixin.class'); then
+            echo "Selected jar does not contain mixin classes. Failing." >&2
+            exit 2
+          fi
 
       - name: Read mod version
         id: ver
