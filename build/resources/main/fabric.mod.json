@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "packetspy",
+  "version": "1.0.3",
+  "name": "PacketSpy",
+  "description": "Opens a window that displays and saves every Minecraft packet going out and coming in.",
+  "authors": [
+    "dev.blackdev"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/packetspy/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.blackdev.PacketSpyMod"
+    ]
+  },
+  "mixins": [
+    "mixins.packetspy.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric": "*",
+    "minecraft": ">=1.21.8",
+    "java": ">=21"
+  }
+}
