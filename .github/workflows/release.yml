@@ -2,43 +2,59 @@ name: build-and-release
 on:
   push:
     branches: ["**"]
+
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Java
+
+      - name: Set up Java 21
+        id: java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
           cache: gradle
-      - name: Download Gradle
+
+      - name: Force JAVA_HOME to Java 21
+        run: echo "JAVA_HOME=${{ steps.java.outputs.path }}" >> $GITHUB_ENV
+
+      - name: Install Gradle 8.14.2
         run: |
-          GV=8.8
+          GV=8.14.2
           curl -sL https://services.gradle.org/distributions/gradle-${GV}-bin.zip -o gradle.zip
           unzip -q gradle.zip
-          echo "GRADLE=./gradle-${GV}/bin/gradle" >> $GITHUB_ENV
+          echo "GRADLE=$PWD/gradle-${GV}/bin/gradle" >> $GITHUB_ENV
+
       - name: Build
         run: |
+          $GRADLE --version
           $GRADLE --no-daemon build -x test
+          ls -al build/libs
+
       - name: Find jar
         id: jar
         run: |
           echo "path=$(ls build/libs/*.jar | head -n 1)" >> $GITHUB_OUTPUT
+
       - name: Read mod version
         id: ver
         run: |
           v=$(grep -E '^mod_version=' gradle.properties | cut -d= -f2)
           echo "ver=$v" >> $GITHUB_OUTPUT
+
       - name: Random suffix
         id: rand
+        shell: bash
         run: |
           CHARS=({A..Z} {0..9})
           echo "suffix=${CHARS[$RANDOM%36]}${CHARS[$RANDOM%36]}" >> $GITHUB_OUTPUT
-      - name: Release
+
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.ver }}-${{ steps.rand.outputs.suffix }}
