@@ -1,0 +1,46 @@
+name: build-and-release
+on:
+  push:
+    branches: ["**"]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - name: Download Gradle
+        run: |
+          GV=8.8
+          curl -sL https://services.gradle.org/distributions/gradle-${GV}-bin.zip -o gradle.zip
+          unzip -q gradle.zip
+          echo "GRADLE=./gradle-${GV}/bin/gradle" >> $GITHUB_ENV
+      - name: Build
+        run: |
+          $GRADLE --no-daemon build -x test
+      - name: Find jar
+        id: jar
+        run: |
+          echo "path=$(ls build/libs/*.jar | head -n 1)" >> $GITHUB_OUTPUT
+      - name: Read mod version
+        id: ver
+        run: |
+          v=$(grep -E '^mod_version=' gradle.properties | cut -d= -f2)
+          echo "ver=$v" >> $GITHUB_OUTPUT
+      - name: Random suffix
+        id: rand
+        run: |
+          CHARS=({A..Z} {0..9})
+          echo "suffix=${CHARS[$RANDOM%36]}${CHARS[$RANDOM%36]}" >> $GITHUB_OUTPUT
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.ver }}-${{ steps.rand.outputs.suffix }}
+          name: PacketSpy ${{ steps.ver.outputs.ver }}-${{ steps.rand.outputs.suffix }}
+          files: ${{ steps.jar.outputs.path }}

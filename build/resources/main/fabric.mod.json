@@ -5,7 +5,7 @@
   "name": "PacketSpy",
   "description": "Opens a window that displays and saves every Minecraft packet going out and coming in.",
   "authors": [
-    "dev.blackdev"
+    "blackdev"
   ],
   "contact": {},
   "license": "MIT",

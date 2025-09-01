@@ -7,7 +7,6 @@ import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.Vector;
 import java.util.regex.Pattern;
-
 public class PacketSpyWindow {
     private static PacketSpyWindow INSTANCE;
     private final JFrame frame;
@@ -26,17 +25,17 @@ public class PacketSpyWindow {
             countLabel = null;
             return;
         }
-        UIManager.put("Panel.background", new Color(0x14,0x14,0x17));
-        UIManager.put("Table.background", new Color(0x1b,0x1d,0x21));
-        UIManager.put("Table.foreground", new Color(0xee,0xee,0xee));
-        UIManager.put("Table.gridColor", new Color(0x2a,0x2d,0x34));
-        UIManager.put("Table.selectionBackground", new Color(0x33,0x66,0x99));
+        UIManager.put("Panel.background", new Color(20,20,23));
+        UIManager.put("Table.background", new Color(27,29,33));
+        UIManager.put("Table.foreground", new Color(238,238,238));
+        UIManager.put("Table.gridColor", new Color(42,45,52));
+        UIManager.put("Table.selectionBackground", new Color(51,102,153));
         UIManager.put("Table.selectionForeground", Color.white);
-        UIManager.put("ScrollPane.background", new Color(0x14,0x14,0x17));
-        UIManager.put("TextField.background", new Color(0x22,0x24,0x29));
-        UIManager.put("TextField.foreground", new Color(0xee,0xee,0xee));
-        UIManager.put("Button.background", new Color(0x23,0x26,0x2b));
-        UIManager.put("Button.foreground", new Color(0xee,0xee,0xee));
+        UIManager.put("ScrollPane.background", new Color(20,20,23));
+        UIManager.put("TextField.background", new Color(34,36,41));
+        UIManager.put("TextField.foreground", new Color(238,238,238));
+        UIManager.put("Button.background", new Color(35,38,43));
+        UIManager.put("Button.foreground", new Color(238,238,238));
         Font mono = new Font(Font.MONOSPACED, Font.PLAIN, 12);
         frame = new JFrame("PacketSpy");
         frame.setSize(980, 640);
@@ -52,14 +51,14 @@ public class PacketSpyWindow {
         table.getColumnModel().getColumn(1).setPreferredWidth(90);
         table.getColumnModel().getColumn(2).setPreferredWidth(650);
         JTableHeader header = table.getTableHeader();
-        header.setForeground(new Color(0xee,0xee,0xee));
-        header.setBackground(new Color(0x20,0x22,0x27));
+        header.setForeground(new Color(240,240,240));
+        header.setBackground(new Color(32,34,39));
         header.setFont(mono.deriveFont(Font.BOLD, 12f));
         DefaultTableCellRenderer stripe = new DefaultTableCellRenderer(){
             @Override public Component getTableCellRendererComponent(JTable t,Object v,boolean s,boolean f,int r,int c){
                 Component comp = super.getTableCellRendererComponent(t,v,s,f,r,c);
                 comp.setFont(mono);
-                Color bg = (r % 2 == 0) ? new Color(0x1b,0x1d,0x21) : new Color(0x18,0x1a,0x1e);
+                Color bg = (r % 2 == 0) ? new Color(27,29,33) : new Color(24,26,30);
                 if (s) bg = UIManager.getColor("Table.selectionBackground");
                 comp.setBackground(bg);
                 return comp;
@@ -71,16 +70,15 @@ public class PacketSpyWindow {
         top.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
         JLabel title = new JLabel("PacketSpy");
         title.setFont(new Font("SansSerif", Font.BOLD, 16));
-        title.setForeground(new Color(0xf0,0xf0,0xf0));
+        title.setForeground(new Color(240,240,240));
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT,8,0));
         left.setOpaque(false);
         left.add(title);
         filterField = new JTextField(28);
-        filterField.putClientProperty("JTextField.placeholderText","Filter class");
         JButton clear = new JButton("Clear");
         JButton alwaysOnTop = new JButton("Pin");
         countLabel = new JLabel("0 shown");
-        countLabel.setForeground(new Color(0xcc,0xcc,0xcc));
+        countLabel.setForeground(new Color(204,204,204));
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT,8,0));
         right.setOpaque(false);
         right.add(countLabel);
@@ -97,7 +95,7 @@ public class PacketSpyWindow {
         filterField.addActionListener(e -> {
             String q = filterField.getText().trim();
             if (q.isEmpty()) sorter.setRowFilter(null);
-            else sorter.setRowFilter(RowFilter.regexFilter("(?i)"+ Pattern.quote(q), 2));
+            else sorter.setRowFilter(RowFilter.regexFilter("(?i)"+Pattern.quote(q), 2));
             updateCount();
         });
         clear.addActionListener(e -> { model.setRowCount(0); updateCount(); });
