@@ -5,7 +5,7 @@
 
 Client-side Fabric mod that logs **every inbound and outbound Minecraft packet**, saves them to NDJSON, and serves a **live web UI** on localhost.
 
-[![License](https://img.shields.io/github/license/BlackDevCoding/Packet-Spy?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/github/license/BlackDevCoding/Packet-Spy?style=for-the-badge)](MIT)
 [![Release](https://img.shields.io/github/v/release/BlackDevCoding/Packet-Spy?display_name=tag&sort=semver&style=for-the-badge)](https://github.com/BlackDevCoding/Packet-Spy/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/BlackDevCoding/Packet-Spy/release.yml?style=for-the-badge)](https://github.com/BlackDevCoding/Packet-Spy/actions)
 [![Issues](https://img.shields.io/github/issues/BlackDevCoding/Packet-Spy?style=for-the-badge)](https://github.com/BlackDevCoding/Packet-Spy/issues)
