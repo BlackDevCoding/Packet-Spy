@@ -11,8 +11,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Detect if any Java "class file" changed in this push.
+      # Interprets "class file" as either source (*.java) or compiled (*.class) committed to the repo.
+      - name: Detect changed class files
+        id: changed
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            class:
+              - 'src/**/*.java'
+              - '**/*.java'
+              - '**/*.class'
 
       - name: Set up Java 21
+        if: steps.changed.outputs.class == 'true'
         id: java
         uses: actions/setup-java@v4
         with:
@@ -21,9 +36,11 @@ jobs:
           cache: gradle
 
       - name: Force JAVA_HOME to Java 21
+        if: steps.changed.outputs.class == 'true'
         run: echo "JAVA_HOME=${{ steps.java.outputs.path }}" >> $GITHUB_ENV
 
       - name: Install Gradle 8.14.2
+        if: steps.changed.outputs.class == 'true'
         run: |
           GV=8.14.2
           curl -sL https://services.gradle.org/distributions/gradle-${GV}-bin.zip -o gradle.zip
@@ -31,41 +48,40 @@ jobs:
           echo "GRADLE=$PWD/gradle-${GV}/bin/gradle" >> $GITHUB_ENV
 
       - name: Build (clean, remap)
+        if: steps.changed.outputs.class == 'true'
         run: |
           $GRADLE --version
           $GRADLE --no-daemon clean build remapJar -x test
           ls -al build/libs
 
       - name: Pick remapped runtime JAR
+        if: steps.changed.outputs.class == 'true'
         id: jar
         shell: bash
         run: |
-          # Prefer Loom's remapped jar naming if present
           CANDIDATE=$(ls build/libs/*-fabric.jar 2>/dev/null || true)
           if [ -z "$CANDIDATE" ]; then
-            # Fallback: any jar that is NOT sources/dev/javadoc
             CANDIDATE=$(find build/libs -maxdepth 1 -type f -name '*.jar' \
-              ! -name '*-sources.jar' ! -name '*-dev.jar' ! -name '*-javadoc.jar' \
-              | head -n 1)
+              ! -name '*-sources.jar' ! -name '*-dev.jar' ! -name '*-javadoc.jar' | head -n 1)
           fi
           if [ -z "$CANDIDATE" ]; then
             echo "No runtime JAR found in build/libs"; exit 1
           fi
           echo "path=$CANDIDATE" >> $GITHUB_OUTPUT
-          echo "Selected: $CANDIDATE"
-          # Quick sanity check for the mixin class presence
           if ! (jar tf "$CANDIDATE" | grep -q 'dev/blackdev/mixin/ClientConnectionMixin.class'); then
             echo "Selected jar does not contain mixin classes. Failing." >&2
             exit 2
           fi
 
       - name: Read mod version
+        if: steps.changed.outputs.class == 'true'
         id: ver
         run: |
           v=$(grep -E '^mod_version=' gradle.properties | cut -d= -f2)
           echo "ver=$v" >> $GITHUB_OUTPUT
 
       - name: Random suffix
+        if: steps.changed.outputs.class == 'true'
         id: rand
         shell: bash
         run: |
@@ -73,8 +89,13 @@ jobs:
           echo "suffix=${CHARS[$RANDOM%36]}${CHARS[$RANDOM%36]}" >> $GITHUB_OUTPUT
 
       - name: Create Release
+        if: steps.changed.outputs.class == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.ver }}-${{ steps.rand.outputs.suffix }}
           name: PacketSpy ${{ steps.ver.outputs.ver }}-${{ steps.rand.outputs.suffix }}
           files: ${{ steps.jar.outputs.path }}
+
+      - name: No class changes — skip
+        if: steps.changed.outputs.class != 'true'
+        run: echo "No *.java or *.class changes in this push. Skipping build & release."
